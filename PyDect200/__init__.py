@@ -1,1 +1,1 @@
-from PyDect200 import *
+from .PyDect200 import *

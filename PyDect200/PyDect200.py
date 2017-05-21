@@ -10,19 +10,19 @@ import hashlib, sys
 try:
     import urllib.request as urllib2
 except ImportError:
-    import urllib2
+    import urllib.request, urllib.error, urllib.parse
 
 class PyDect200(object):
     """
     Class to Control the AVM DECT200 Socket
     """
-    __version__ = u'0.0.15'
-    __author__ = u'Mathias Perlet'
-    __author_email__ = u'mathias@mperlet.de'
-    __description__ = u'Control Fritz AVM DECT200'
+    __version__ = '0.0.15'
+    __author__ = 'Mathias Perlet'
+    __author_email__ = 'mathias@mperlet.de'
+    __description__ = 'Control Fritz AVM DECT200'
 
-    __fritz_url = u'http://fritz.box'
-    __homeswitch = u'/webservices/homeautoswitch.lua'
+    __fritz_url = 'http://fritz.box'
+    __homeswitch = '/webservices/homeautoswitch.lua'
 
     __debug = False
 
@@ -39,7 +39,7 @@ class PyDect200(object):
 
     def __homeauto_url_with_sid(self):
         """Returns formatted uri"""
-        return u'%s%s?sid=%s' % (self.__fritz_url,
+        return '%s%s?sid=%s' % (self.__fritz_url,
                                  self.__homeswitch,
                                  self.sid)
 
@@ -47,19 +47,19 @@ class PyDect200(object):
     def __query(cls, url):
         """Reads a URL"""
         try:
-            return urllib2.urlopen(url).read().decode('utf-8').replace('\n', '')
-        except urllib2.HTTPError:
+            return urllib.request.urlopen(url).read().decode('utf-8').replace('\n', '')
+        except urllib.error.HTTPError:
             _, exception, _ = sys.exc_info()
             if cls.__debug:
-                print('HTTPError = ' + str(exception.code))
-        except urllib2.URLError:
+                print(('HTTPError = ' + str(exception.code)))
+        except urllib.error.URLError:
             _, exception, _ = sys.exc_info()
             if cls.__debug:
-                print('URLError = ' + str(exception.reason))
+                print(('URLError = ' + str(exception.reason)))
         except Exception:
             _, exception, _ = sys.exc_info()
             if cls.__debug:
-                print('generic exception: ' + str(exception))
+                print(('generic exception: ' + str(exception)))
                 raise
             pass
         return "inval"
@@ -68,7 +68,7 @@ class PyDect200(object):
 
     def __query_cmd(self, command, device=None):
         """Calls a command"""
-        url = u'%s&switchcmd=%s' % (self.__homeauto_url_with_sid(), command)
+        url = '%s&switchcmd=%s' % (self.__homeauto_url_with_sid(), command)
         if device is None:
             return self.__query(url)
         else:
@@ -76,16 +76,16 @@ class PyDect200(object):
 
     def get_sid(self):
         """Returns a valid SID"""
-        base_url = u'%s/login_sid.lua' % self.__fritz_url
+        base_url = '%s/login_sid.lua' % self.__fritz_url
         get_challenge = None
         try:
-            get_challenge = urllib2.urlopen(base_url).read().decode('ascii')
-        except urllib2.HTTPError as exception:
-            print('HTTPError = ' + str(exception.code))
-        except urllib2.URLError as  exception:
-            print('URLError = ' + str(exception.reason))
+            get_challenge = urllib.request.urlopen(base_url).read().decode('ascii')
+        except urllib.error.HTTPError as exception:
+            print(('HTTPError = ' + str(exception.code)))
+        except urllib.error.URLError as  exception:
+            print(('URLError = ' + str(exception.reason)))
         except Exception as exception:
-            print('generic exception: ' + str(exception))
+            print(('generic exception: ' + str(exception)))
             raise
 
 
@@ -98,7 +98,7 @@ class PyDect200(object):
         md5hash.update(challenge_b)
 
         response_b = challenge + '-' + md5hash.hexdigest().lower()
-        get_sid = urllib2.urlopen('%s?response=%s' % (base_url, response_b)).read().decode('utf-8')
+        get_sid = urllib.request.urlopen('%s?response=%s' % (base_url, response_b)).read().decode('utf-8')
         self.sid = get_sid.split('<SID>')[1].split('</SID>')[0]
 
     def get_info(self):
@@ -126,7 +126,7 @@ class PyDect200(object):
     def get_power(self):
         """Returns the Power in Watt"""
         power_dict = self.get_power_all()
-        for device in power_dict.keys():
+        for device in list(power_dict.keys()):
             power_dict[device] = float(power_dict[device]) / 1000.0
         return power_dict
 
@@ -163,7 +163,7 @@ class PyDect200(object):
     def get_power_all(self):
         """Returns the power in mW for all devices"""
         power_dict = {}
-        for device in self.get_device_names().keys():
+        for device in list(self.get_device_names().keys()):
             power_dict[device] = self.get_power_single(device)
         return power_dict
 
@@ -184,6 +184,6 @@ class PyDect200(object):
     def get_state_all(self):
         """Returns all device states"""
         state_dict = {}
-        for device in self.get_device_names().keys():
+        for device in list(self.get_device_names().keys()):
             state_dict[device] = self.get_state(device)
         return state_dict
